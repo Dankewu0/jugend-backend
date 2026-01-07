@@ -18,7 +18,11 @@ class UserService
 
   public function login(array $data)
   {
-    $user = User::where('email', $data['email'])->first();
+    $login = $data['login'];
+
+    $user = str_contains($login, '@')
+      ? User::where('email', $login)->first()
+      : User::where('name', $login)->first();
 
     if (!$user || !Hash::check($data['password'], $user->password)) {
       abort(401, 'Invalid credentials');

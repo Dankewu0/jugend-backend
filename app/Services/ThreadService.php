@@ -8,11 +8,11 @@ use Illuminate\Support\Str;
 
 class ThreadService
 {
-  public function list()
+  public function list(int $perPage = 20)
   {
     return Thread::with(['user', 'category'])
       ->latest()
-      ->paginate(20);
+      ->paginate($perPage);
   }
 
   public function show(Thread $thread)
@@ -22,22 +22,24 @@ class ThreadService
 
   public function create(User $user, array $data)
   {
-    $user->can('create_thread') || abort(403);
+    if (!$user->can('create_thread')) {
+      abort(403);
+    }
 
-    $thread = Thread::create([
+    return Thread::create([
       'user_id' => $user->id,
       'category_id' => $data['category_id'],
       'title' => $data['title'],
       'slug' => Str::slug($data['title']),
       'body' => $data['body'],
     ]);
-
-    return $thread;
   }
 
   public function update(User $user, Thread $thread, array $data)
   {
-    ($user->can('edit_thread') && $user->id === $thread->user_id) || abort(403);
+    if (!$user->can('edit_thread') || $user->id !== $thread->user_id) {
+      abort(403);
+    }
 
     if (isset($data['title'])) {
       $data['slug'] = Str::slug($data['title']);
@@ -50,8 +52,20 @@ class ThreadService
 
   public function delete(User $user, Thread $thread)
   {
-    ($user->can('delete_thread') && $user->id === $thread->user_id) || abort(403);
+    if (!$user->can('delete_thread') || $user->id !== $thread->user_id) {
+      abort(403);
+    }
 
     $thread->delete();
+  }
+
+  public function popular(int $limit = 5)
+  {
+    return Thread::withCount('posts')
+      ->with(['user', 'category'])
+      ->orderByDesc('posts_count')
+      ->orderByDesc('updated_at')
+      ->take($limit)
+      ->get();
   }
 }

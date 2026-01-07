@@ -5,16 +5,27 @@ namespace App\Http\Controllers;
 use App\Models\Thread;
 use App\Services\ThreadService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class ThreadController extends Controller
 {
-    public function index(ThreadService $service)
+    protected ThreadService $service;
+
+    public function __construct(ThreadService $service)
     {
-        return $service->list();
+        $this->service = $service;
     }
 
-    public function store(Request $request, ThreadService $service)
+    public function index()
+    {
+        return $this->service->list();
+    }
+
+    public function popular()
+    {
+        return $this->service->popular();
+    }
+
+    public function store(Request $request)
     {
         $data = $request->validate([
             'title' => 'required|string|max:255',
@@ -22,15 +33,15 @@ class ThreadController extends Controller
             'category_id' => 'required|exists:categories,id',
         ]);
 
-        return $service->create($request->user(), $data);
+        return $this->service->create($request->user(), $data);
     }
 
-    public function show(Thread $thread, ThreadService $service)
+    public function show(Thread $thread)
     {
-        return $service->show($thread);
+        return $this->service->show($thread);
     }
 
-    public function update(Request $request, Thread $thread, ThreadService $service)
+    public function update(Request $request, Thread $thread)
     {
         $data = $request->validate([
             'title' => 'sometimes|string|max:255',
@@ -38,12 +49,12 @@ class ThreadController extends Controller
             'category_id' => 'sometimes|exists:categories,id',
         ]);
 
-        return $service->update($request->user(), $thread, $data);
+        return $this->service->update($request->user(), $thread, $data);
     }
 
-    public function destroy(Thread $thread, ThreadService $service)
+    public function destroy(Thread $thread)
     {
-        $service->delete(request()->user(), $thread);
+        $this->service->delete(request()->user(), $thread);
 
         return response()->noContent();
     }
