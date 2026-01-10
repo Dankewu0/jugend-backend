@@ -11,9 +11,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'login']);
+
 Route::get('/threads/popular', [ThreadController::class, 'popular']);
 
-Route::middleware('auth')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [UserController::class, 'me']);
     Route::patch('/me', [UserController::class, 'update']);
     Route::post('/logout', [UserController::class, 'logout']);
